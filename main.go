@@ -6,7 +6,7 @@
 // Start with the package identifier
 package main
 
-// If you start working with a library (and same the file) it seems to add it automatically
+// If you start working with a library (and save the file) it seems to add it automatically
 import (
 	"bufio"
 	"fmt"
@@ -17,11 +17,15 @@ import (
 	"strings"
 )
 
+// MARK: Main
 // Entry point is determined by a function called main
 func main() {
 	println("Hello, Gophers!")     // This is a built in print function, but isn't what we usually are going to use (good for keeping less dependencies, debugging)
 	fmt.Println("Hello, Gophers!") // This is the imported version we typically want to use, for formatted strings and such
+}
 
+// MARK: Module 3
+func mod3() {
 	// Variables are strongly typed
 	fmt.Println("\n-- Variables --")
 	var myName string          // Declare variable
@@ -101,20 +105,33 @@ func main() {
 	fmt.Println(*u)
 	// Use copies whenever possible, sharing memory risks race conditions
 	t = new(string) // A second valid way to create a pointer
+}
 
+// MARK: Module 4
+func mod4() {
 	// Module 4 CLI Application
-	// fmt.Println("\n --- Module 4 ---")
-	// fmt.Println("What would you like me to scream?")
-	// in := bufio.NewReader(os.Stdin) // Stdin alone reads one character at a time. What we've done here is wrapped it with bufio to read more useful chunks
-	// st, _ := in.ReadString('\n')    // Read until you reach your specified delimiter, single quotes specify that we're delimiting a single character, 2 returned variables (string and error)
-	// st = strings.TrimSpace(st)
-	// st = strings.ToUpper(st)
-	// fmt.Println(st + "!")
+	fmt.Println("\n --- Module 4 ---")
+	fmt.Println("What would you like me to scream?")
+	in := bufio.NewReader(os.Stdin) // Stdin alone reads one character at a time. What we've done here is wrapped it with bufio to read more useful chunks
+	st, _ := in.ReadString('\n')    // Read until you reach your specified delimiter, single quotes specify that we're delimiting a single character, 2 returned variables (string and error)
+	st = strings.TrimSpace(st)
+	st = strings.ToUpper(st)
+	fmt.Println(st + "!")
 
 	// Module 4 Web Service
-	// http.HandleFunc("/", Handler)              // Register the function as the back controller
-	// http.ListenAndServe("localhost:3000", nil) // Start the web service to be listening, normally you need to give the IP and the port (local host can be assumed). Nil is the second arg because Go will provide the front handler for us
+	http.HandleFunc("/", Handler)              // Register the function as the back controller
+	http.ListenAndServe("localhost:3000", nil) // Start the web service to be listening, normally you need to give the IP and the port (local host can be assumed). Nil is the second arg because Go will provide the front handler for us
 
+}
+
+// Module 4 Web Service (this is the back controller)
+func Handler(w http.ResponseWriter, r *http.Request) {
+	f, _ := os.Open("./menu.txt") // Open reads a file for reading, again 2 returned variables (file object and error)
+	io.Copy(w, f)                 // Copy lets us copy from a read source (like a file) to a write source
+}
+
+// MARK: Module 5
+func mod5() {
 	// Module 5
 	fmt.Println("\n --- Module 5 ---")
 	var arr [3]int   // Array of 3 ints
@@ -199,30 +216,27 @@ func main() {
 		name: "Bob",
 		id:   42}
 	ma := ba
-	ma.name = "Celine"	
+	ma.name = "Celine"
 	fmt.Println(ba, ma) // Notice that when we changed the value in ma it didn't change ba, so it's a copy not a share
-	fact := ba == ma // false - structs are comparable
+	fact := ba == ma    // false - structs are comparable
 	fmt.Println(fact)
+}
 
-
+// MARK: Module 6
+func mod6(){
 
 }
 
-// Module 4 Web Service (this is the back controller)
-func Handler(w http.ResponseWriter, r *http.Request) {
-	f, _ := os.Open("./menu.txt") // Open reads a file for reading, again 2 returned variables (file object and error)
-	io.Copy(w, f)                 // Copy lets us copy from a read source (like a file) to a write source
-}
-
-func menu(){
+// MARK: Demo App
+func menu() {
 	fmt.Println("Please select an option")
 	fmt.Println("1) Print menu")
 	in := bufio.NewReader(os.Stdin)
 	choice, _ := in.ReadString('\n')
-	choice = strings.TrimSpace(choice) 
+	choice = strings.TrimSpace(choice)
 
-	type menuItem struct{
-		name string
+	type menuItem struct {
+		name   string
 		prices map[string]float64
 	}
 
@@ -234,6 +248,7 @@ func menu(){
 	fmt.Println(menu)
 }
 
+// MARK: Notes
 /*
 Module 3
 	Simple Data Types
@@ -292,6 +307,16 @@ Module 5
 		Structs are special because they can contain different data types at the same time. Structs are fixed sized. The fields do need to be hardcoded, they
 		can't be determined at runtime.
 
+Module 6
+	Looping (control of execution)
+		Every type of loop is a for loop, but there are different types
+		Infinite loop
+
+		Loop til condition
+
+		Counter-based loop
+
+		Looping over collections
 */
 
 /*
