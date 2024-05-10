@@ -15,6 +15,8 @@ import (
 	"os"
 	"slices"
 	"strings"
+	// Adding my own package
+	"demo/coffeeshop"
 )
 
 // MARK: Main
@@ -22,9 +24,10 @@ import (
 func main() {
 	println("Hello, Gophers!")     // This is a built in print function, but isn't what we usually are going to use (good for keeping less dependencies, debugging)
 	fmt.Println("Hello, Gophers!") // This is the imported version we typically want to use, for formatted strings and such
+	coffeeshop.Operate()
 }
 
-// MARK: Module 3
+// MARK: Simple Data Types
 func mod3() {
 	// Variables are strongly typed
 	fmt.Println("\n-- Variables --")
@@ -107,7 +110,7 @@ func mod3() {
 	t = new(string) // A second valid way to create a pointer
 }
 
-// MARK: Module 4
+// MARK: Creating Programs
 func mod4() {
 	// Module 4 CLI Application
 	fmt.Println("\n --- Module 4 ---")
@@ -130,7 +133,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, f)                 // Copy lets us copy from a read source (like a file) to a write source
 }
 
-// MARK: Module 5
+// MARK: Aggregate Data Types
 func mod5() {
 	// Module 5
 	fmt.Println("\n --- Module 5 ---")
@@ -222,8 +225,8 @@ func mod5() {
 	fmt.Println(fact)
 }
 
-// MARK: Module 6
-func mod6(){
+// MARK: Looping
+func mod6() {
 	// Infinite loop for {...}
 	i := 1
 	for {
@@ -236,7 +239,7 @@ func mod6(){
 	j := 1
 	for j < 3 {
 		fmt.Println(j)
-		j ++
+		j++
 	}
 	fmt.Println("Done!")
 
@@ -258,31 +261,86 @@ func mod6(){
 	// for _, value := range collection {...} (ignores the key/index and only returns the value)
 }
 
-// MARK: Demo App
-func menu() {
-	fmt.Println("Please select an option")
-	fmt.Println("1) Print menu")
-	// in := bufio.NewReader(os.Stdin)
-	// choice, _ := in.ReadString('\n')
-	// choice = strings.TrimSpace(choice)
+// MARK: Branching Logic
+func mod7() {
+	// Goto statements
+myLabel:
+	fmt.Println("Back here")
 
-	type menuItem struct {
-		name   string
-		prices map[string]float64
+	// if test {...}  else if test {...}  else {...}
+	// if initializer; test {...}
+	i := 5
+	if i < 5 { // This line can also be i := 5; i < 5
+		fmt.Println("i is less than 5")
+	} else if i < 10 {
+		fmt.Println("i is less than 10")
+	} else { // Notice how it shares a line with the end bracket before it
+		fmt.Println("i is at least 10")
+	}
+	fmt.Println("After the if statement")
+
+	/* switch test {
+	case expression1:
+		...
+	case expression2, epxression3:
+		...
+	default:
+		...
+	}
+	*/
+	i = 5
+	switch i { // we can also do switch i = 5; i {
+	case 1:
+		fmt.Println("First case")
+	case 2 + 3, 2*i + 3:
+		fmt.Println("Second case")
+	default:
+		fmt.Println("Default case")
 	}
 
-	menu := []menuItem{
-		{name: "Coffee", prices: map[string]float64{"small": 1.65, "medium": 1.80, "large": 1.95}},
-		{name: "Espresso", prices: map[string]float64{"single": 1.90, "double": 2.25, "triple": 2.55}},
+	// The only difference between a switch and a logical switch is the logic of the condiiton
+	switch i := 8; true { // true can also be left as implied
+	case i < 5:
+		fmt.Println("i is less than 5")
+	case i < 10:
+		fmt.Println("i is less than 10")
+	default:
+		fmt.Println("i is greater than 10")
 	}
 
-	for _, item := range menu {
-		fmt.Println(item.name)
-		fmt.Println(strings.Repeat("-", 10))
-		for size, price := range item.prices{
-			fmt.Printf("\t%10s%10.2f\n", size, price)
+	// Deferred Functions
+	fmt.Println("first")
+	defer fmt.Println("defer this")
+	fmt.Println("second")
+	defer fmt.Println("defer that") // Deferred functions are LIFO (last in first out)
+	/* The above will print as
+		first
+		second
+		defer that
+		defer this
+	It prints in this order because of the typical use cases of defered statements, for example databases
+	A database is a resource, we need to make sure release resources when we're done with that
+	Now all of that is relevant because when we release resources we are doing it in the opposite order to how we opened them (like closing brackets),
+	and what we can do is defer the closing immediately after we open it so that we don't forget to do it
+	*/
+	dividend, divisor := 10, 5
+	fmt.Printf("%v divided by %v is %v\n", dividend, divisor, divide(dividend, divisor))
+
+	dividend, divisor = 10, 0
+	fmt.Printf("%v divided by %v is %v\n", dividend, divisor, divide(dividend, divisor))
+
+	// Go statements
+	goto myLabel
+}
+
+// Panic demo
+func divide(dividend, divisor int) int {
+	defer func() {
+		if msg := recover(); msg != nil {
+			fmt.Println(msg)
 		}
-	}
+	}()
+	return dividend / divisor
 }
 
 // MARK: Notes
@@ -354,6 +412,41 @@ Module 6
 		Counter-based loop
 
 		Looping over collections
+
+Module 7
+	Panic is a built in function that tell us that the function is no longer stable and destroys the function and returns to its calling function but it
+	doesn't know how to handle the panic so it also gets destroyed and returns to its caller. That goes all the way up the call stack until the program exits
+	We can also use deferred functions to react to a panic
+	recover() is the paired built in function that goes with panic()
+
+	goto statements
+	1. Can leave a block (anything contained in curly braces)
+	2. Can jump to a containing block
+	3. Cannot jump after variable declarations
+	4. Cannot jump into another block
+
+Module 8
+	func funcName (parameters string, are int, comma, delimited sting) (return values) { function body }
+	Above, comma is type string because it inherits the next specified datatype
+	Variadic parameters pass a comma delimited list as a splice. It has to be the last parameter, and there can be only one per function.
+	Passing pointers you add *dataType in the function signature, *variableName when we use it in the function, and &passedVariable
+	Pointers should only be used when we want to share memory. Every other instance should use values
+
+	Values can be returned as a single value (single value or expression) and is put back into the variable assigned to the function call.
+	Don't need () in the function signature
+	Values can be returned as multiple values (values or expressions) and is put back into the variables assigned to the function call, in order.
+	Do need () in the function signature (not the return line)
+	Values can be returned as a Named Return value. The function signature looks almost the same except we've included variable names with the types.
+	And instead of explicitly listing the variable names on the return line, we just write return. The return statement will then return the current
+	value of the variables we listed in the function signature. These aren't super common, but it's just interesting to think about
+
+	A package is a directory within a module that contians at least one source file. Keep in mind that all members are visible to other package members
+	In your source file, the first line is the package declaration. Every file in the package will have the same name there, and that's the name of the folder it's in.
+	Then, you'll have the import statement. 
+	After this is your package level member (variables, constants, functions, etc)
+	There are 2 levels of visability
+		Package level field (has lowercase first letter)
+		Public field (has uppercase first letter)
 */
 
 /*
