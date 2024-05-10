@@ -6,8 +6,16 @@
 // Start with the package identifier
 package main
 
-// If you start working with a library it seems to add it automatically
-import "fmt"
+// If you start working with a library (and same the file) it seems to add it automatically
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"slices"
+	"strings"
+)
 
 // Entry point is determined by a function called main
 func main() {
@@ -94,9 +102,140 @@ func main() {
 	// Use copies whenever possible, sharing memory risks race conditions
 	t = new(string) // A second valid way to create a pointer
 
+	// Module 4 CLI Application
+	// fmt.Println("\n --- Module 4 ---")
+	// fmt.Println("What would you like me to scream?")
+	// in := bufio.NewReader(os.Stdin) // Stdin alone reads one character at a time. What we've done here is wrapped it with bufio to read more useful chunks
+	// st, _ := in.ReadString('\n')    // Read until you reach your specified delimiter, single quotes specify that we're delimiting a single character, 2 returned variables (string and error)
+	// st = strings.TrimSpace(st)
+	// st = strings.ToUpper(st)
+	// fmt.Println(st + "!")
+
+	// Module 4 Web Service
+	// http.HandleFunc("/", Handler)              // Register the function as the back controller
+	// http.ListenAndServe("localhost:3000", nil) // Start the web service to be listening, normally you need to give the IP and the port (local host can be assumed). Nil is the second arg because Go will provide the front handler for us
+
+	// Module 5
+	fmt.Println("\n --- Module 5 ---")
+	var arr [3]int   // Array of 3 ints
+	fmt.Println(arr) // [0 0 0]
+	arr = [3]int{1, 2, 3}
+	fmt.Println(arr[1]) // Print an index
+	arr[1] = 99         // Update the value at an index
+	fmt.Println(arr)
+	fmt.Print(len(arr)) // Prints the length
+	// The following shows that arrays copy data, not share memory
+	arr2 := [3]string{"foo", "bar", "baz"}
+	arr3 := arr2
+	fmt.Println(arr3)
+	arr2[0] = "quux"
+	fmt.Println(arr2)
+	fmt.Println(arr3)
+	fmt.Println(arr2 == arr3) // false - arrays are comparable
+
+	// Slices
+	var sl []int // Notice how there's no size initialized
+	fmt.Println(sl)
+	sl = []int{1, 2, 3}
+	fmt.Println(sl[1])
+	sl[1] = 99
+	fmt.Println(sl)            // Creating, accessing, printing, updating are all the same as arrays
+	sl = append(sl, 5, 10, 15) // Make the slice bigger (don't forget to add the original chunk in!)
+	fmt.Println(sl)
+	sl = slices.Delete(sl, 1, 3) // The slices package is part of the experimental standard package (golang.org/x/exp/slices)
+	fmt.Println(sl)
+	// The key difference is how updating a value that's been "copied". Because you're referencing an array structure, when the value is updated the change affect both variables
+
+	// Maps
+	var m1 map[string]int
+	fmt.Println(m1)
+	m1 = map[string]int{"foo": 1, "bar": 2}
+	fmt.Println(m1)
+	fmt.Println(m1["foo"]) // Look up value
+	m1["bar"] = 99         // Update value
+	delete(m1, "foo")      // Remove entry from map
+	m1["baz"] = 418        // Add entry to map, simply use a not-yet-used key
+	fmt.Println(m1)
+	fmt.Println(m1["foo"]) // Now that foo has been deleted, this will print out 0 because that's the default value
+	v, ok := m1["foo"]     // If it's important to know whether that's a non-existant value or an important 0, we use this. If the value v comes out, ok will be true or false
+	fmt.Println(v, ok)
+	// Maps are copied by reference, but if you need them to be independednt you can use the experimental package maps.Clone
+	// Maps are not comparable
+	menu := map[string][]string{
+		"coffee": {"Coffee", "Espresso", "Cappuccino"},
+		"tea":    {"Hot Tea", "Chai", "Chai Latte"}, // Notice here that we do want the comma line endings, because it's a multi line declaration
+	}
+	fmt.Println(menu)
+	fmt.Println(menu["coffee"])
+	menu["other"] = []string{"Hot Chocolate"}
+	fmt.Println(menu)
+	// Notice that maps are NOT ORDERED, the ordering is non-deterministic and not done by order of entry or alphabetical
+	delete(menu, "tea")
+	fmt.Println(menu)
+	fmt.Println(menu["tea"])
+	va, ok := menu["tea"]
+	fmt.Println(va, ok)
+	m2 := menu
+	m2["coffee"] = []string{"Coffee"}
+	menu["tea"] = []string{"Hot Tea"}
+	fmt.Println(menu)
+	fmt.Println(m2)
+
+	// Structs
+	var ah struct { // Declare anonymous struct
+		name string
+		id   int
+	}
+	fmt.Println(ah)
+	ah.name = "Arthur"     // Update value of a field
+	fmt.Println(ah.name)   // Access value of a field
+	type myStruct struct { // Custom type
+		name string
+		id   int
+	}
+	var ba myStruct
+	fmt.Println(ba)
+	ba = myStruct{
+		name: "Bob",
+		id:   42}
+	ma := ba
+	ma.name = "Celine"	
+	fmt.Println(ba, ma) // Notice that when we changed the value in ma it didn't change ba, so it's a copy not a share
+	fact := ba == ma // false - structs are comparable
+	fmt.Println(fact)
+
+
+
+}
+
+// Module 4 Web Service (this is the back controller)
+func Handler(w http.ResponseWriter, r *http.Request) {
+	f, _ := os.Open("./menu.txt") // Open reads a file for reading, again 2 returned variables (file object and error)
+	io.Copy(w, f)                 // Copy lets us copy from a read source (like a file) to a write source
+}
+
+func menu(){
+	fmt.Println("Please select an option")
+	fmt.Println("1) Print menu")
+	in := bufio.NewReader(os.Stdin)
+	choice, _ := in.ReadString('\n')
+	choice = strings.TrimSpace(choice) 
+
+	type menuItem struct{
+		name string
+		prices map[string]float64
+	}
+
+	menu := []menuItem{
+		{name: "Coffee", prices: map[string]float64{"small": 1.65, "medium": 1.80, "large": 1.95}},
+		{name: "Espresso", prices: map[string]float64{"single": 1.90, "double": 2.25, "triple": 2.55}},
+	}
+
+	fmt.Println(menu)
 }
 
 /*
+Module 3
 	Simple Data Types
 		Not primatives, we're talking about data types that can contain only one value (strings, numbers, booleans, errors)
 
@@ -124,4 +263,37 @@ func main() {
 		Dereferencing the pointer (*baz) shows me the value being stored in the address assigned to baz
 		And now if I change foo and print *baz I get the updated value of foo because we're printing the same memory address
 		Pointers are sharing memory, values are used to copy memory
+
+Module 4
+	Creating a CLI (Command Line Interface) Application
+		CLI Application connects the user and computer through the monitor (display output) and keyboard (recieve input).
+		Standard library tools for CLI: the OS package (stdin, stdout, stderr) and fmt package (string management => scan functions, print functions) and
+		bufio package (buffered i/o => group text into useful chunks)
+
+	Creating a Web Service
+		A web service is 2 computers (the client and the server) that are talking to each other with requests and responses
+		There is one comprehensive package for web in Go: net/http
+
+Module 5
+	Aggregate Data Types
+		AKA collections
+
+		Arrays are fixed sized collections of data that are all the same type
+
+		Slices always refer to data stored in some array. Slices aren't fixed in size. Slices are referenced data types, which means if you update the value
+		in the array it changes the value in the slice, and if you change the value in the slice it changes the value in the array.
+		The slices package is technically part of the standard library but is really an experimental portion, so we need to import it from the terminal with
+		go get golang.org/x/exp/slices. It creates a go.sum file the next time we run it, which keeps tracks of our dependencies.
+
+		Maps let us use our own index, using value and key instead of value and (strictly numeric) index. Maps are also not fixed size. Maps are also reference
+		types like slices. Maps can have 2 data types (one for the keys and one for the values)
+		Experimental package: golang.org/x/exp/maps
+
+		Structs are special because they can contain different data types at the same time. Structs are fixed sized. The fields do need to be hardcoded, they
+		can't be determined at runtime.
+
+*/
+
+/*
+	Get queries on sprint 6
 */
