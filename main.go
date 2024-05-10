@@ -224,16 +224,47 @@ func mod5() {
 
 // MARK: Module 6
 func mod6(){
+	// Infinite loop for {...}
+	i := 1
+	for {
+		fmt.Println(i)
+		i += 1
+		break
+	}
 
+	// Loop til condition for condition {...}
+	j := 1
+	for j < 3 {
+		fmt.Println(j)
+		j ++
+	}
+	fmt.Println("Done!")
+
+	// Counter-based loop for initializer; test; post clause {...}
+	for k := 1; k < 3; k++ {
+		fmt.Println(k)
+	}
+	fmt.Println("Done!")
+
+	// Looping through collections (there are 3 versions of this)
+	arr := [3]int{101, 102, 103}
+	// for key, value := range collection {...} (collection can be array, slice or map)
+	for i, v := range arr {
+		fmt.Println(i, v)
+	}
+	fmt.Println("Done!")
+
+	// for key := range collection {...} (returns the key/index)
+	// for _, value := range collection {...} (ignores the key/index and only returns the value)
 }
 
 // MARK: Demo App
 func menu() {
 	fmt.Println("Please select an option")
 	fmt.Println("1) Print menu")
-	in := bufio.NewReader(os.Stdin)
-	choice, _ := in.ReadString('\n')
-	choice = strings.TrimSpace(choice)
+	// in := bufio.NewReader(os.Stdin)
+	// choice, _ := in.ReadString('\n')
+	// choice = strings.TrimSpace(choice)
 
 	type menuItem struct {
 		name   string
@@ -245,7 +276,13 @@ func menu() {
 		{name: "Espresso", prices: map[string]float64{"single": 1.90, "double": 2.25, "triple": 2.55}},
 	}
 
-	fmt.Println(menu)
+	for _, item := range menu {
+		fmt.Println(item.name)
+		fmt.Println(strings.Repeat("-", 10))
+		for size, price := range item.prices{
+			fmt.Printf("\t%10s%10.2f\n", size, price)
+		}
+	}
 }
 
 // MARK: Notes
