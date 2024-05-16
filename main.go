@@ -9,12 +9,14 @@ package main
 // If you start working with a library (and save the file) it seems to add it automatically
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"slices"
 	"strings"
+
 	// Adding my own package
 	"demo/coffeeshop"
 )
@@ -343,6 +345,167 @@ func divide(dividend, divisor int) int {
 	return dividend / divisor
 }
 
+// MARK: Interfaces
+/*
+type Reader interface { // Annonymous interface
+	Read([]byte) (int, error)
+}
+
+type File struct {
+}
+func (f File) Read(b []byte) (n int, err error)
+
+type TCPConn struct {
+}
+func (t TCPConn) Read(b []byte) (n int, err error)
+
+var f File
+var t TCPConn
+
+var r Reader
+r = f
+r.Read()
+r = t
+r.Read()
+
+// Type Assertion
+var f2 File = r // This wouldn't work because Go can't guaruntee the underlying type of the interface
+f2 = r.(File) // This is a type assertion, and if you're wrong it will panic
+f2, ok := r.(File) // This is also a type assertion, but if you are unsure it won't panic and will tell if or if not a file was present and f2 will not be changed here
+
+// Type Switch (if you want to check multiple types, as opposed to just one)
+switch v := r.(type) {
+case File:
+	// v is now a file
+case TCPConn:
+	// v is now a TCPConn object
+default:
+	// If no type was matched, make v this type of object
+}
+*/
+
+// Should go at type of project
+type printer interface {
+	Print() string
+}
+
+type user struct {
+	username string
+	id       int
+}
+
+func (u user) Print() string {
+	return fmt.Sprintf("%v [%v]\n", u.username, u.id)
+}
+
+type menuItem struct {
+	name   string
+	prices map[string]float64
+}
+
+func (mi menuItem) Print() string {
+	var b bytes.Buffer
+	b.WriteString(mi.name + "\n")
+	b.WriteString(strings.Repeat("-", 10) + "\n")
+	for size, cost := range mi.prices {
+		fmt.Fprintf(&b, "\t%10s%10.2f\n", size, cost)
+	}
+
+	return b.String()
+}
+
+func mod9() {
+	var p printer
+	p = user{username: "adent", id: 42}
+	fmt.Println(p.Print())
+
+	p = menuItem{name: "Coffee",
+		prices: map[string]float64{"small": 1.65,
+			"medium": 1.80,
+			"large":  1.95,
+		},
+	}
+	fmt.Println(p.Print())
+
+	u, ok := p.(user)
+	fmt.Println(u, ok) // This triggers a panic, well not when we add the ok to control the panic
+	mi, ok := p.(menuItem)
+	fmt.Println(mi, ok)
+
+	switch v := p.(type) {
+	case user:
+		fmt.Println("Found a user:", v)
+	case menuItem:
+		fmt.Println("Found a menu item:", v)
+	default:
+		fmt.Println("I'm not sure what this is")
+	}
+}
+
+// MARK: Generics
+func mod9_2(){
+	testScores := []float64 {
+		87.3, 
+		105, 
+		63.5,
+		27,
+	}
+
+	c := clone(testScores)
+
+	fmt.Println(&testScores[0], &c[0], c) // Should have different memory addresses but same result
+	// This is great and all, but what if we change from Float64 to Float32, or what if we want to clone strings... 
+	// We'd need a whole new function and then have to call the right function based on the input and ugh
+}
+
+// V is the name we're giving our generic, and that square bracket after clone is telling Go what is considered V
+func clone[V any](s []V) []V {
+	result := make([]V, len(s))
+	for i, v := range s {
+		result[i] = v
+	}
+	return result
+}
+
+// Basically you can't compare any type to any type, so K can be anything as long as it's comparable
+func compClone[K comparable, V any](m map[K]V) map[K]V {
+	result := make(map[K]V, len(m))
+	for k, v := range m {
+		result[k] = v
+	}
+	return result
+}
+
+// Create custome type constraints
+func mod9_3(){
+	a1 := []int{1, 2, 3}
+	a2 := []float64{3.14, 6.02}
+	a3 := []string{"foo", "bar", "baz"}
+
+	s1 := add(a1)
+	s2 := add(a2)
+	s3 := add(a3)
+
+	fmt.Printf("Sum of %v: %v\n", a1, s1)
+	fmt.Printf("Sum of %v: %v\n", a2, s2)
+	fmt.Printf("Sum of %v: %v\n", a3, s3)
+}
+
+// Make our own custom constraints (ie we can't use any or comparable, so create our own set)
+type addable interface {
+	int | float64 | string
+}
+// If we added something that would break our function (like bool) it would flag
+
+func add[V addable](s []V) V {
+	var result V
+	for _, v := range s {
+		result += v // Problem is Go doesn't know how to use + for literally any type
+	}
+
+	return result
+}
+
 // MARK: Notes
 /*
 Module 3
@@ -442,13 +605,31 @@ Module 8
 
 	A package is a directory within a module that contians at least one source file. Keep in mind that all members are visible to other package members
 	In your source file, the first line is the package declaration. Every file in the package will have the same name there, and that's the name of the folder it's in.
-	Then, you'll have the import statement. 
+	Then, you'll have the import statement.
 	After this is your package level member (variables, constants, functions, etc)
 	There are 2 levels of visability
 		Package level field (has lowercase first letter)
 		Public field (has uppercase first letter)
-*/
 
-/*
-	Get queries on sprint 6
+Module 9
+	Go isn't by definition object oriented, but it can be used that way
+
+	A method starts with a custom type, something we control. It doesn't have to be a struct like before.
+	Once we have our type, we create what looks like a function signature, but there is a method receiver too
+	Function: func isEven(i int) bool
+	Method:   func (i myInt) isEven() bool
+	The invocation is also slightly different
+	Function: ans := isEven(i)
+	Method:   ans := var.isEven()
+	The method receiver tells us if we're passing a value or a pointer. And generally to decide which to use, pointer receivers are used to share variables
+	between the caller and method
+	In terms of using methods vs functions... use whatever is most readable. Sometimes binding data to a function is beneficial (ie methods) but both are
+	valid and common
+
+	Interfaces let us generalize behaviours, for example we want a reader interface but we don't always know what type we're reading from (file vs tcp connection).
+	Interfaces are great, but types lose their identitiy and that's not necessarily what we want. 
+
+	Generic programming helps solve the lost identity by temporarily changing the identity but after using the generic function the object goes back to its original type. 
+	✨Transient Polymorphism✨
+	We can use generic functionality without sacrificing what we know about the object
 */

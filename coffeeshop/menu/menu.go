@@ -34,11 +34,12 @@ func (m *menu) add(){
 
 var in = bufio.NewReader(os.Stdin)
 
+// Functions
 func AddItem() {
 	data.add()
 }
 
-func Print(){
+func PrintMenu(){
 	data.print()
 }
 
