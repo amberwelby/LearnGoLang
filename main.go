@@ -17,6 +17,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 
 	// Adding my own package
 	"demo/coffeeshop"
@@ -560,6 +561,66 @@ func divPanic(l, r int) (result int, err error){
 	return l / r, nil
 }
 
+// MARK: Concurrency
+func mod11() {
+	var wg sync.WaitGroup
+	ch := make(chan int)
+	ch2 := make(chan string)
+	wg.Add(2) // Tell the wait group how many tasks we're waiting for
+	// We're telling the scheduler to do this concurrent task when there is resources
+	go func() {
+		ch <- 42
+	}() // This is an anonymous function that we're invoking immediately
+		
+	go func() {
+		fmt.Println(<-ch)
+		wg.Done() // Tell the wait group that we've finished one of the tasks we told it to wait for
+	}()
+
+	go func() {
+		ch2 <- "The message"
+	}()
+
+	go func() {
+		fmt.Println(<-ch2)
+		wg.Done()
+	}()
+	// But the program will end too quickly and the scheduler doesn't have time to execute the goroutine so we add the wait group first
+	wg.Wait()
+
+	// Select statements
+	ch3, ch4 := make(chan string), make(chan string)
+
+	go func() {
+		ch3 <- "This is channel 1"
+	}()
+
+	go func() {
+		ch4 <- "This is channel 2"
+	}()
+
+	select {
+	case msg := <-ch3:
+		fmt.Println(msg)
+	case msg := <-ch4:
+		fmt.Println(msg)
+	default:
+		fmt.Println("No messages available")
+	}
+
+	// Looping channels
+	go func() {
+		for i := 0; i < 10; i++ {
+			ch <- i
+		}
+		close(ch) // Indicates to the for loop that no more messages are coming. If not, it'll timeout and indicate deadlock
+	}()
+
+	for msg := range ch {
+		fmt.Println(msg)
+	}
+}
+
 // MARK: Notes
 /*
 Module 3
@@ -697,4 +758,26 @@ Module 10
 		Errors are part of the function signature, for panics we rely on documentation or understanding code to know if it's a possibility
 		Errors indicate a deviation from the plan, panics indicate unstability 
 
+Module 11
+	Concurrency
+		Concurrency isn't parallelism. Concurrency is that the program can do multiple things at the same time, parallelism is the act of doing multiple things at the same
+		time. 
+		CSP (Communicating Sequential Processes) is how we implement concurrency. The fan in pattern is lots of workers creating results and sending them through a single
+		channel to a single receiving worker. The fan out pattern is a single worker sending creating results and sending them through a single channel to multiple receiving
+		workers. 
+		Workers are goroutines, channels are channels
+	
+	Goroutine is a function executing concurrently with other goroutines in the same address space. A goroutine is lightweight, needing little other than an allocation of 
+	stack space. There is a slight performance cost, but it's so lightweight that you could add thousands and Go would manage just fine
+	
+	WaitGroups are counters with special behaviour when the value is zero. 
+			There is a WaitGroup type, an Add method that increments by delta, a Done method that decrements by 1, and a Wait method that waits until the counter is zero
+	
+	Channels are types and are stored as variables. It's the only type in go that must be created with the make() built-in function. A channel is a pipeline to send messages.
+	channel operations are blocking, they will wait until the complementary operation is ready. 
+
+	Select statements are like switch statements for channels and are used when you have multiple channels sending and receiving, and making sure everything goes to the right place
+	and doesn't take too long. 
+	Adding a default case makes the select statement non-blocking. 
+	With select statements, if there are multiple cases that can be executed, one is chosen *at random* (unlike switch statements)
 */
