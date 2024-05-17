@@ -27,7 +27,10 @@ loop: // This is a label, it helps us access things like telling the switch what
 		case "1":
 			menu.PrintMenu()
 		case "2":
-			menu.AddItem()
+			err := menu.AddItem()
+			if err != nil { // True if error occured
+				fmt.Println(fmt.Errorf("invalid input: %w", err)) // Sometimes we don't want to return the actual error message to the user, but maybe log it somewhere
+			}
 		case "q":
 			break loop
 		default:

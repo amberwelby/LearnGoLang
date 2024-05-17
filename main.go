@@ -10,6 +10,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -443,10 +444,10 @@ func mod9() {
 }
 
 // MARK: Generics
-func mod9_2(){
-	testScores := []float64 {
-		87.3, 
-		105, 
+func mod9_2() {
+	testScores := []float64{
+		87.3,
+		105,
 		63.5,
 		27,
 	}
@@ -454,7 +455,7 @@ func mod9_2(){
 	c := clone(testScores)
 
 	fmt.Println(&testScores[0], &c[0], c) // Should have different memory addresses but same result
-	// This is great and all, but what if we change from Float64 to Float32, or what if we want to clone strings... 
+	// This is great and all, but what if we change from Float64 to Float32, or what if we want to clone strings...
 	// We'd need a whole new function and then have to call the right function based on the input and ugh
 }
 
@@ -477,7 +478,7 @@ func compClone[K comparable, V any](m map[K]V) map[K]V {
 }
 
 // Create custome type constraints
-func mod9_3(){
+func mod9_3() {
 	a1 := []int{1, 2, 3}
 	a2 := []float64{3.14, 6.02}
 	a3 := []string{"foo", "bar", "baz"}
@@ -495,6 +496,7 @@ func mod9_3(){
 type addable interface {
 	int | float64 | string
 }
+
 // If we added something that would break our function (like bool) it would flag
 
 func add[V addable](s []V) V {
@@ -504,6 +506,58 @@ func add[V addable](s []V) V {
 	}
 
 	return result
+}
+
+// MARK: Errors
+func mod10() {
+	// Errors are easy to create
+	err := errors.New("This is an error")
+	fmt.Println(err)
+	err2 := fmt.Errorf("This error wraps the first one: %w", err)
+	fmt.Println(err2)
+
+	// Don't handle error
+	// fmt.Println(divNoHandle(10,0))
+
+	// Handle with error
+	// result, err := divError(10, 0)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return 
+	// }
+	// fmt.Println("Result:", result)
+
+	// Handle with panic
+	// result, err := divPanic(10, 0)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return 
+	// }
+	// fmt.Println("Result:", result)
+
+}
+
+func divNoHandle(l, r int) int {
+	return l / r
+}
+
+func divError(l, r int) (int, error) {
+	if r == 0 {
+		return 0, errors.New("division by zero")
+	}
+	return l / r, nil
+}
+
+// We want to return to normal program flow as quickly as possible
+// This is a good use case for named return values!
+func divPanic(l, r int) (result int, err error){
+	defer func() {
+		if msg := recover(); msg != nil {
+			result = 0
+			err = fmt.Errorf("%v", msg)
+		}
+	}()
+	return l / r, nil
 }
 
 // MARK: Notes
@@ -627,9 +681,20 @@ Module 9
 	valid and common
 
 	Interfaces let us generalize behaviours, for example we want a reader interface but we don't always know what type we're reading from (file vs tcp connection).
-	Interfaces are great, but types lose their identitiy and that's not necessarily what we want. 
+	Interfaces are great, but types lose their identitiy and that's not necessarily what we want.
 
-	Generic programming helps solve the lost identity by temporarily changing the identity but after using the generic function the object goes back to its original type. 
+	Generic programming helps solve the lost identity by temporarily changing the identity but after using the generic function the object goes back to its original type.
 	✨Transient Polymorphism✨
 	We can use generic functionality without sacrificing what we know about the object
+
+Module 10
+	Error management
+		Errors shouldn't be surprising or unexpected, when running on a big enough scale we should expect to run into errors eventually
+		Errors in Go are values, like any other function return value. It's not a result we want, but it's still a result that we can do something with
+		Check if an error has occured immediately after it may have happened... handle things first, then continue on
+	Errors vs panics
+		We want to avoid panicing as often as possible. An error is just the result of an operation, a panic changes the flow of the program. 
+		Errors are part of the function signature, for panics we rely on documentation or understanding code to know if it's a possibility
+		Errors indicate a deviation from the plan, panics indicate unstability 
+
 */
