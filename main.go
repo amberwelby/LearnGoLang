@@ -621,6 +621,13 @@ func mod11() {
 	}
 }
 
+// MARK: Testing
+func Add(l, r int) int {
+	return l + r
+}
+// First, make somewhere for the test to live. It will be it's own file, and have the suffix _test.go. The convention is to name it 
+// after the source file it's testing, but it's really important to have the suffix because that's how the tester knows what to run
+
 // MARK: Notes
 /*
 Module 3
@@ -780,4 +787,28 @@ Module 11
 	and doesn't take too long. 
 	Adding a default case makes the select statement non-blocking. 
 	With select statements, if there are multiple cases that can be executed, one is chosen *at random* (unlike switch statements)
+
+Module 12
+	Testing
+		Testing is made of different chunks, and we'll start go through them in order of most to least used. It's not that the least used are less important, but more that
+		they are more resource intensive and difficult to implement
+
+		Unit testing proves that individual units of logic are correct. Units are the smallest divisions of a program (ie functions or even parts of functions)
+
+		Component testing confirms that different application packages work properly
+
+		Integration testing validates that the entire program works together as expected
+
+		End to end testing demonstrates that the entire system works together properly (adding in the infrastructure, network, databases). These are important but resource intensive
+
+	Go helps us test for correctness, performance, and resources.
+		For correctness, Go gives us 3 tools: tests (confirm correctness of application), fuzz test (uses AI to generate test scenarios, helps find edge cases), and example
+		tests (similar to tests but tightly integrated with documentation)
+
+		For performance, Go gives us benchmarks (check the time and memory requirements of a test scenario we define)
+
+		Resource usage is a subcategory of performance and Go gives us 2 tools: profiling (aggregate result of benchmarks and gives a breakdown of where resources were used) and 
+		tracing (same as profiling, but includes a time axis to help find performance bottlenecks)
+
+	https://pkg.go.dev/testing and https://go.dev/doc/diagnostics
 */
